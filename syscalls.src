@@ -1,0 +1,34 @@
+  .SECTION P,CODE,ALIGN=4
+       .MACRO SYSCALL FUNO, SYSCALLNAME, TAIL=nop
+       .export \SYSCALLNAME'
+\SYSCALLNAME'
+       mov.l #h'\FUNO, r0
+       mov.l #H'80010070, r2
+       jmp @r2
+       \TAIL'
+       .ENDM
+
+	SYSCALL 040C, _Serial_ReadOneByte
+	SYSCALL 040E, _Serial_BufferedTransmitOneByte
+	SYSCALL 0418, _Serial_Open
+	SYSCALL 0419, _Serial_Close
+	SYSCALL 0413, _Serial_ClearReceiveBuffer
+	SYSCALL 003B, _RTC_GetTicks
+	SYSCALL 0135,  _Disp_GetVRAMPtr
+	SYSCALL 0420, _Sleep
+	SYSCALL 090F, _GetKey
+	SYSCALL 0807, _locate
+	SYSCALL 0808, _Print
+	SYSCALL 0118, _Timer_Install
+	SYSCALL 0119, _Timer_Uninstall
+	SYSCALL 011A, _Timer_Start
+	SYSCALL 0160, _itoa
+	SYSCALL 040E, _Serial_WriteByte
+	SYSCALL 0910, _PutKey
+	SYSCALL 0015, _GlibGetOSVersionInfo
+	SYSCALL 02A0, _USB_CaptureDisplay
+	SYSCALL 0C4F, _PrintMini
+	SYSCALL 0241, _Keyboard_ClrBuffer
+	SYSCALL 003C, _RTC_Elapsed_ms
+	SYSCALL 06C4, _Keyboard_PRGM_GetKey;
+   .end
