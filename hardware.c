@@ -1,8 +1,15 @@
+// Thanks to SimonLothar, cfxm and all the other hackers!
+
 #include "global.h"
 #include "hardware.h"
 
+// here are some functions for direct hardware access
+// they are splitted to support different calculators
+
 char *vram, *vram2;
 
+// backlight funcions: on, off, switch, check
+// if it's unknown hardware we should do nothing
 void BacklightOn()
 {
 	if(!IsEmulator)
@@ -59,6 +66,7 @@ int BacklightIsOn()
 	}
 }
 
+// change contrast only for known calcs
 void set_contrast(int contrast)
 {
 	if(!getCalc() == UNKNOWN && !IsEmulator)
@@ -69,6 +77,7 @@ void set_contrast(int contrast)
 	}
 }
 
+// update the display, if secure; otherwise use syscalls (sloooow!)
 void display_vram()
 {
 	if(getCalc() == UNKNOWN && !IsEmulator)
@@ -92,6 +101,7 @@ void display_vram()
 	}
 }
 
+// clear video ram
 void clear_vram()
 {
 	int i, end;
@@ -108,6 +118,7 @@ void clear_vram()
 	for(i=0 ; i<end ; i++) pointer_byte[i] = 0;
 }
 
+// if possible, let it restart after going to the main menu
 short*APP_EnableRestart()
 {
 	if(getCalc() != UNKNOWN && !IsEmulator)
@@ -135,6 +146,7 @@ short*APP_EnableRestart()
 	return NULL;
 }
 
+// return the model
 int getCalc(void)
 {
 	static int hardware = UNKNOWN;

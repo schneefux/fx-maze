@@ -7,6 +7,8 @@
 
 #include "stdio.h"
 
+// in-game menu
+
 void openmenu()
 {
 	uchar text[30];

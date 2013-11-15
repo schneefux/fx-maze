@@ -2,8 +2,10 @@
 #include "calc.h"
 #include "syscalls.h"
 
+// table that holds precalculated values for the floor and ceiling
 int TDist[64];
 
+// random number generator; could be improved
 static uint lastrandom = 0x123456;
 
 void seedrandom(void)
@@ -17,6 +19,7 @@ unsigned int random()
 	return (lastrandom >> 16);
 }
 
+// inits constants for floor etc
 void table()
 {
 	int x;
@@ -26,6 +29,7 @@ void table()
 	}
 }
 
+// fills an array
 void fill(uint *ptr, uint element, uint arraysize)
 {
 	for(;arraysize > 0; arraysize--, ptr++)

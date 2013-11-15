@@ -2,9 +2,11 @@
 #include "key.h"
 #include "hardware.h"
 
+// SHA4 only
 static const unsigned short* keyboard_register = (unsigned short*)0xA44B0000;
 static unsigned short lastkey[8];
 
+// syscall getkey (non-blocking)
 int PRGM_GetKey()
 {
 	unsigned char buffer[12];
@@ -12,12 +14,14 @@ int PRGM_GetKey()
 	return (buffer[1] & 0x0F) * 10 + ((buffer[2] & 0xF0)  >> 4);
 }
 
+// do I have to explain this?
 static void delay()
 {
 	unsigned int i;
 	for(i=0 ; i<5 ; i++);
 }
 
+// fast function for SH3
 static unsigned char CheckKeyRow(int code)
 {
 	unsigned int result=0;
@@ -64,6 +68,7 @@ static unsigned char CheckKeyRow(int code)
 	return result;
 }
 
+// update key buffer
 void keyupdate()
  {
  	if(getCalc() == fx9860GII_2)
@@ -72,6 +77,7 @@ void keyupdate()
     	}
 }
  
+// check for keypress, depending on the calculator
 int keydown(int code)
 {
 	if(getCalc() != UNKNOWN)

@@ -1,7 +1,9 @@
 #include "global.h"
 #include "hardware.h"
 
+// constants for the map overview
 const uint sizex = 128 / MAPSIZE, sizey = 64 / MAPSIZE;
+// output by move()
 int output = 1;
 
 int contrast = 0;
@@ -10,16 +12,19 @@ int contradd = 5;
 int gundir = 1;
 
 int exit = FALSE;
+// demo mode for future use
 int demo = FALSE;
 
+// holds the sprites
 struct st_sprite *sprites = NULL;
+// the player's values
 struct st_player player;
 uint spritecnt = 0;
 
 const char *status = NULL;
 unsigned int statustimer = 0;
 
-uint map[MAPSIZE][MAPSIZE] = {0};/*
+uint map[MAPSIZE][MAPSIZE] = {0}; // this is now generated automatically/*
 {
 	{ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 },
 	{ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 2 , 0 , 0 , 0 , 0 , 1 },
@@ -43,7 +48,7 @@ uint map[MAPSIZE][MAPSIZE] = {0};/*
 	{ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 },
 };*/
 
-int heights[MAPSIZE][MAPSIZE] = {0};/*
+int heights[MAPSIZE][MAPSIZE] = {0}; // this, too. 0 means normal height, 32 is about half of the normal/*
 {
 	{ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 },
 	{ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 32 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 },
@@ -67,8 +72,10 @@ int heights[MAPSIZE][MAPSIZE] = {0};/*
 	{ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 },
 };*/
 
-uint solids[MAPSIZE][MAPSIZE] = {0};
+uint solids[MAPSIZE][MAPSIZE] = {0}; // here you can check whether you can walk through something
+// nice idea would be a hidden wall you can walk through to access a secret room... hmmm
 
+// something happened that should not happen
 void error(void)
 {
 	clear_vram();

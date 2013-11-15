@@ -4,6 +4,9 @@
 #include "hardware.h"
 #include "sprites.h"
 
+// this code is a random map generator based on the kill and hunt algorithm
+
+// this counts unempty neighbours
 static int cntunvisit(union st_field cnt)
 {
 	int c = 0;
@@ -15,6 +18,7 @@ static int cntunvisit(union st_field cnt)
 	return (c > 1)?c:0;
 }
 
+// count empty ones, including ones that are outside which are counted as wall
 static int cntempty(int x, int y)
 {
 	union st_field c;
@@ -35,6 +39,7 @@ static int cntempty(int x, int y)
 	return cnt;
 }
 
+// count walls
 static int cntwall(int x, int y)
 {
 	union st_field c;
@@ -55,6 +60,7 @@ static int cntwall(int x, int y)
 	return cnt;
 }
 
+// return as st_field from map point
 static union st_field get(int x, int y)
 {
 	union st_field c;
@@ -69,6 +75,7 @@ static union st_field get(int x, int y)
 	return c;
 }
 
+// try to find a wall with unvisited neighbours
 static int hunt(int *x, int *y)
 {
 	for(*x = 1; *x < MAPSIZE - 1; *x+=2)
@@ -84,6 +91,7 @@ static int hunt(int *x, int *y)
 			}
 		}
 	}
+	// if there is none, we can start the main game
 	return FALSE;
 }
 
@@ -94,6 +102,7 @@ static int kill(int *x, int *y, union st_field this)
 	{
 		if(cntunvisit(this) == 0)fail1 = fail2 = fail3 = fail4 = TRUE;
 		
+		// try to 'digg' in random directions
 		switch(random() % 4)
 		{
 			case 0:
@@ -179,12 +188,15 @@ static int kill(int *x, int *y, union st_field this)
 		
 		if(fail1 == TRUE && fail2 == TRUE && fail3 == TRUE && fail4 == TRUE)
 		{
+			// dead end, try to find a new starting point
 			return hunt(x, y);
 		}
 	}
+	// no possible move left, let's go and kill some robots
 	return FALSE;
 }
 
+// see if we can walk through that maze
 static int solve()
 {
 	int priotable[4];
@@ -193,6 +205,7 @@ static int solve()
 	int deltax = 1, deltay = 0;
 	int dir, dirx, diry;
 start:
+	// that's dirty, I know, but it works
 	for(curx = 0; curx < MAPSIZE; curx++)
 	{
 		for(cury = 0; cury < MAPSIZE; cury++)
@@ -236,6 +249,7 @@ start:
 				dir = WEST;
 		}
 		
+		// this is called the right-hand method, I think
 		switch(dir)
 		{
 			case NORTH:
@@ -263,6 +277,7 @@ start:
 				priotable[3] = EAST;
 		}
 		
+		// try again with left-hand :D
 		for(dir = 0; dir < 4; dir++)
 		{
 			switch(priotable[dir])
@@ -294,12 +309,15 @@ start:
 			}
 		}
 		
+		// we are at the start again?
 		if(curx == 1 && cury == 1)
 		{
+			// this maze has no exit, make another one
 			return FALSE;
 		}
 		
-		if(IsEmulator())
+		// debug only
+		if(IsEmulator)
 		{
 			clear_vram();
 			drawgenmap();
@@ -308,6 +326,7 @@ start:
 		}
 	}
 	
+	// make changes permanent
 	for(curx = 0; curx < MAPSIZE; curx++)
 	{
 		for(cury = 0; cury < MAPSIZE; cury++)
@@ -325,6 +344,7 @@ start:
 		}
 	}
 	
+	// create packs in dead-ends
 	for(curx = 0; curx < MAPSIZE; curx++)
 	{
 		for(cury = 0; cury < MAPSIZE; cury++)
@@ -348,6 +368,7 @@ start:
 			}
 			else if(map[curx][cury] == WALL)
 			{
+				// reduce the height of low walls, this gives a nice effect
 				if(cntwall(curx, cury) == 2)
 				{
 					heights[curx][cury] = 32;
@@ -362,6 +383,7 @@ start:
 		{
 			if(map[curx][cury] == SPACE && cntwall(curx, cury) < 2)
 			{
+				// it is easier with some doors that connect two floors
 				int dx, dy, fail1, fail2, fail3, fail4;
 				fail1 = fail2 = fail3 = fail4 = FALSE;
 				
@@ -395,13 +417,17 @@ start:
 	return TRUE;
 }
 
+// main loop
 void maze()
 {
 	do
 	{
 		int x = 1, y = 1, exit = TRUE;
 
+		// create an empty map
 		fill(&map, WALL, MAPSIZE * MAPSIZE);
+		
+		// render it until it is solvable
 		while(exit == TRUE)
 		{
 			map[x][y] = SPACE;

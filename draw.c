@@ -1,3 +1,5 @@
+// Thanks to PierrotLL for MonochromeLib! I took some functions and modified them a bit.
+
 #include "global.h"
 #include "draw.h"
 #include "sprites.h"
@@ -5,8 +7,10 @@
 #include "key.h"
 #include "syscalls.h"
 
+// options, this can speed up the rendering
 int drawfloor = FALSE, drawheight = TRUE, drawtex = TRUE;
 
+// fast drawing function for horizontal lines
 void horizontal(int y, int x1, int x2)
 {
 	int checker, i;
@@ -23,6 +27,7 @@ void horizontal(int y, int x1, int x2)
 	else vram[(y<<4)+(x1>>3)] |= (255>>(x1%8 + 7-x2%8))<<(7-(x2&7));
 }
 
+// fills a box using horizontal
 void fillbox(int x1, int y1, int x2, int y2)
 {
 	int i;
@@ -42,11 +47,13 @@ void fillbox(int x1, int y1, int x2, int y2)
 		horizontal(i, x1, x2);
 }
 
+// a printmini in locate-like lines (1 to 7, but small chars)
 void locatePrintMini(int x, int y, const uchar *text)
 {
 	PrintMini((x - 2) * 6, (y - 2) * 8, text, 0);
 }
 
+// draws a generated map, only used in generation before the main game
 void drawgenmap()
 {
 	int x, y;
@@ -57,35 +64,42 @@ void drawgenmap()
 		{
 			if(map[x][y] == WALL || map[x][y] == CHECKED)
 			{
+				// draws a filled box wherever a wall is or could be
 				fillbox(x * sizex, y * sizey, (x + 1) * sizex, (y + 1) * sizey);
 			}
 		}
 	}
 }
 
+// draws the map in the main game, including items
 void showmap()
 {
 	int x, y, exit = FALSE;
-	int windowx = player.x, windowy = player.x, zoom = 8;
-	const char plsprite = 0xA9;
-	int lastkey, thiskey = 0;
+	int windowx = player.x, windowy = player.x, zoom = 8; // variables for scrolling
+	const char plsprite = 0xA9; // player's icon
+	int lastkey, thiskey = 0; // hold the pressed keys for a better movement
+	
 	do
 	{
-		int skew = 64 / zoom;
+		int skew = 64 / zoom; // factor for zooming
 		
 		while(windowx + zoom * 2 >= MAPSIZE)
 		{
-			windowx--;
+			windowx--; // if the window is outside of the map
 		}
 		
+		// clear display
 		clear_vram();
 		
+		// draw all static blocks
 		for(x = windowx; x < windowx + zoom * 2; x++)
 		{
 			for(y = windowy; y < windowy + zoom; y++)
 			{
+				// draw every square that is in the bounds of the viewer
 				if(map[x][y] != SPACE)
 				{
+					// if there is something, draw it
 					fillbox((x - windowx) * skew, (y - windowy) * skew, (x + 1 - windowx) * skew, (y + 1 - windowy) * skew);
 					switch(map[x][y])
 					{
@@ -97,11 +111,13 @@ void showmap()
 				}
 				else if(x == (int)player.x && y == (int)player.y)
 				{
+					// the player gets a nice icon
 					PrintMini((player.x - windowx) * skew + 1, (player.y - windowy) * skew, &plsprite, MINI_OVER);
 				}
 			}
 		}
 		
+		// draw sprites
 		for(x = 0; x < spritecnt; x++)
 		{
 			if(sprites[x].x >= windowx && sprites[x].x < windowx + zoom * 2 && sprites[x].y >= windowy && sprites[x].y < windowy + zoom)
@@ -109,17 +125,21 @@ void showmap()
 				switch(sprites[x].type)
 				{
 					case TYPE_ENEMY:
+						// it's an enemy
 						PrintMini((sprites[x].x - windowx) * skew, (sprites[x].y - windowy) * skew, "!", MINI_OVER);
 						break;
 					case TYPE_PACK:
+						// health pack
 						PrintMini((sprites[x].x - windowx) * skew, (sprites[x].y - windowy) * skew, "+", MINI_OVER);
 						break;
 				}
 			}
 		}
 		
+		// refresh
 		display_vram();
 		
+		// emulate a GetKey-like speeding up on hold
 		keyupdate();
 		
 		if(lastkey != thiskey)
@@ -133,7 +153,9 @@ void showmap()
 		
 		lastkey = thiskey;
 		
-		if(keydown(KEY_CTRL_EXIT))exit = TRUE;
+		if(keydown(KEY_CTRL_EXIT)) exit = TRUE; // back to the game
+		
+		// move the window
 		if(keydown(KEY_CTRL_UP) && windowy > 0)
 		{
 			windowy--;
@@ -154,6 +176,8 @@ void showmap()
 			windowx++;
 			thiskey = KEY_CTRL_RIGHT;
 		}
+		
+		// zoom in and out
 		if(keydown(KEY_CHAR_PLUS) && zoom > 1)
 		{
 			zoom--;
@@ -167,18 +191,22 @@ void showmap()
 	}while(exit == FALSE);
 }
 
+// draws the gun on the bottom of the screen
 void drawgun()
 {
 	int i,u;
 	
 	const int y = 47 + player.gunpos;
 	
+	// depending on the weapon, but both are 21 x 22
+	// this could be improved, but it is ok like this
 	for(i = 0; i < 21; i++)
 	{
 		for(u = 0; u < 22; u++)
 		{
 			if(y + u <= 64)
 			{
+				// 0 = transparent, 1 = black, 2 = white
 				switch(player.weapon)
 				{
 					case GUN:
@@ -214,15 +242,20 @@ void drawgun()
 	}
 }
 
+// draw a vertical stripe using textures if wanted
+// args: x coord, x in texture, lower side's y, upper side's y, type of sprite, color (inversed or not)
+// if steps are given, use them; otherwise we get problems with the floor or ceiling
 void vertical(int x, int tex, int start, int end, int type, int color, float steps)
 {
 	int y = start;
 	int pos = 1 << 7, step;
-	
+
+	// this fastens the progress	
 	uchar xbyte = x & 7;
 	uchar shiftbyte = (128 >> xbyte);
 	uchar *buffpos = (unsigned char*)(vram + (x >> 3));
-		
+	
+	// do we need to draw textures?	
 	if(drawtex == FALSE && type == 1)
 	{
 		if(start > end)
@@ -238,6 +271,7 @@ void vertical(int x, int tex, int start, int end, int type, int color, float ste
 		pixel(x,start);	
 	}
 	
+	// swap the end and start to draw from top down
 	if(start > end)
 	{
 		int tmp = start;
@@ -245,55 +279,59 @@ void vertical(int x, int tex, int start, int end, int type, int color, float ste
 		end = tmp;
 	}
 	
+	// for every type of sprite use different textures
 	switch(type)
 	{
-		case 1 :
-		if(steps == 0)
-		step = (16 << 8) / (end - start);
-		else
-		step = (16.0 / steps) * 128.0;
-	
-		for(; y < end;pos += step, y++)
-		{
-			if(wall[color][pos >> 8][(int)(tex >> 2)] == 1)
-			(*(buffpos +  (y << 4))) |= ((1 << 7) >> xbyte);
-			/*else
-			(*(buffpos +  (y << 4))) &= ~((1 << 7) >> xbyte);*/			
-		}
-		break;
+		case WALL:
+			// bitshifts are _lots_ faster than floats!
+			if(steps == 0)
+				step = (16 << 8) / (end - start);
+			else
+				step = (16.0 / steps) * 128.0;
 		
-		case 2 :
-		if(steps == 0)
-		step = (16 << 8) / (end - start);		
-		else
-		step = (16.0 / steps) * 128.0;
-	
-		for(; y < end;pos += step, y ++)
-		{
-			(*(buffpos +  (y << 4))) |= ((door[pos >> 8][(int)(tex >> 2)] << 7) >> xbyte);
-		}
-		break;
+			for(; y < end;pos += step, y++)
+			{
+				if(wall[color][pos >> 8][(int)(tex >> 2)] == 1)
+					(*(buffpos +  (y << 4))) |= ((1 << 7) >> xbyte);
+				
+				/*else
+				(*(buffpos +  (y << 4))) &= ~((1 << 7) >> xbyte);*/			
+			}
+			break;
+		
+		case DOOR:
+			if(steps == 0)
+				step = (16 << 8) / (end - start);		
+			else
+				step = (16.0 / steps) * 128.0;
+		
+			for(; y < end;pos += step, y ++)
+			{
+				(*(buffpos +  (y << 4))) |= ((door[pos >> 8][(int)(tex >> 2)] << 7) >> xbyte);
+			}
+			break;
 		
 		case 3 :
-		if(steps == 0)
-		step = (8 << 8) / (end - start);
-		else
-		step = (8.0 / steps) * 128.0;
-	
-		for(; y < end;pos += step, y ++)
-		{
-			if(pack[pos >> 8][(int)(tex >> 3)] == 1)
-			{
-				(*(buffpos +  (y << 4))) |= shiftbyte;
-			}
+			// this is a health packet
+			if(steps == 0)
+			step = (8 << 8) / (end - start);
 			else
+			step = (8.0 / steps) * 128.0;
+		
+			for(; y < end;pos += step, y ++)
 			{
-				if(pack[pos >> 8][(int)(tex >> 3)] == 2)
+				if(pack[pos >> 8][(int)(tex >> 3)] == 1)
 				{
-					(*(buffpos + (y << 4))) &= ( ~shiftbyte);		
-				}			
+					(*(buffpos +  (y << 4))) |= shiftbyte;
+				}
+				else
+				{
+					if(pack[pos >> 8][(int)(tex >> 3)] == 2)
+					{
+						(*(buffpos + (y << 4))) &= ( ~shiftbyte);		
+					}			
+				}
 			}
-		}
-		break;
+			break;
 	}
 }

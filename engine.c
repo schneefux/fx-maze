@@ -11,6 +11,7 @@
 
 float fps;
 
+// swap two floats
 void swap(float *a, float *b)
 {
 	float tmp = *a;
@@ -18,6 +19,7 @@ void swap(float *a, float *b)
 	*b = tmp;
 }
 
+// sort algorithm for sprites
 void combSort(int* order, float* dist, int amount)
 {
 	int gap = amount, i;
@@ -43,17 +45,21 @@ void combSort(int* order, float* dist, int amount)
 
 #define PI 3.141592653589793238464
 
+// perform a shoot
 static void pshoot()
 {
 	float xadd, yadd, x, y;
 	int c;
 	
+	// check for every sprite whether it is hit
 	for(c = 0; c < spritecnt; c++)
 	{
+		// but just enemies, packs shouldn't die
 		if(sprites[c].type == TYPE_ENEMY)
 		{
-			 x = player.x;
-			 y = player.y;
+			x = player.x;
+			y = player.y;
+			
 			if(Abs(x - sprites[c].x) > Abs(y - sprites[c].y))
 			{
 				xadd = sgn(sprites[c].x - x);
@@ -65,8 +71,9 @@ static void pshoot()
 				yadd = sgn(sprites[c].y - y);
 			}
 			
-			if(1/*TODOTODOTODOTODO*/)
+			if(1/*TODOTODOTODOTODO*/) // todo: implement something to check whether the player shoots in the right direction
 			{
+				// very simple raycasting
 				while(x < MAPSIZE && y < MAPSIZE && x >= 0 && y >= 0)
 				{
 					x += xadd;
@@ -74,6 +81,7 @@ static void pshoot()
 					
 					if((int)y == (int)sprites[c].y && (int)x == (int)sprites[c].x)
 					{
+						// if hit, reduce enemie's health or let it die
 						sprites[c].effect -= 5;
 						if(sprites[c].effect <= 0)
 						{
@@ -81,9 +89,11 @@ static void pshoot()
 							sprites = (struct st_sprite *) realloc(sprites, spritecnt-- * sizeof(struct st_sprite));
 							if(sprites == NULL)error();
 						}
+						// we hit an enemy, go back to the game
 						return;
 					}
 					
+					// if there is a wall, no chance, try again
 					if(solids[(int)(x + 0.5)][(int)(y + 0.5)] == SOLID)
 					{
 						break;
@@ -94,17 +104,22 @@ static void pshoot()
 	}
 }
 
+// this moves the player in the world
 void move()
 {
 	float oldDirX, oldPlaneX, moveSpeed = fps * 1.25, rotSpeed = fps / 1.25;
 	float newx = 0, newy = 0;
+	// update the key buffer
 	keyupdate();
+	
+	// I hope this is self-explaining
 	if(keydown(KEY_CTRL_DOWN) || keydown(KEY_CTRL_UP) || keydown(KEY_CTRL_LEFT) || keydown(KEY_CTRL_RIGHT))
 	{
 		if(keydown(KEY_CTRL_DOWN))
 		{
 				newy = player.y - (player.dirY * moveSpeed);
 				newx = player.x - (player.dirX * moveSpeed);
+				
 				if(newx >= 0 && newx < MAPSIZE)
 				if(solids[(int)newx][(int)player.y] != SOLID)
 				{
@@ -116,7 +131,7 @@ void move()
 				{
 					player.y = newy;
 				}
-				output = 2;
+				output = 2; // 2 means the player moved, so the gun has to move
 		}
 		if(keydown(KEY_CTRL_UP))
 		{
@@ -136,12 +151,15 @@ void move()
 		}
 		if(keydown(KEY_CTRL_RIGHT))
 		{
+				// rotate the plane
 				oldDirX = player.dirX;
 				player.dirX = player.dirX * cosf(-rotSpeed) - player.dirY * sinf(-rotSpeed);
 				player.dirY = oldDirX * sinf(-rotSpeed) + player.dirY * cosf(-rotSpeed);
 				oldPlaneX = player.planeX;
 				player.planeX = player.planeX * cosf(-rotSpeed) - player.planeY * sinf(-rotSpeed);
 				player.planeY = oldPlaneX * sinf(-rotSpeed) + player.planeY * cosf(-rotSpeed);
+				
+				// if the output is 2 (move gun), let it; ortherwise set to 1 (just update)
 				output = (output < 2)?1:2;
 		}
 		if(keydown(KEY_CTRL_LEFT))
@@ -152,8 +170,11 @@ void move()
 				oldPlaneX = player.planeX;
 				player.planeX = player.planeX * cosf(rotSpeed) - player.planeY * sinf(rotSpeed);
 				player.planeY = oldPlaneX * sinf(rotSpeed) + player.planeY * cosf(rotSpeed);
+				
 				output = (output < 2)?1:2;
 		}
+		
+		// if we hit a sprite
 		if(solids[(int)newx][(int)newy] == SPRITE)
 		{
 			int c;
@@ -161,14 +182,17 @@ void move()
 			{
 				if(sprites[c].type == TYPE_PACK && (int)sprites[c].x == (int)newx && (int)sprites[c].y == (int)newy)
 				{
+					// cool, it is a pack
 					solids[(int)newx][(int)newy] = UNSOLID;
 					player.health += sprites[c].effect;
 					
+					// delete it
 					sprites[c] = sprites[spritecnt];
 					sprites = (struct st_sprite *) realloc(sprites, spritecnt-- * sizeof(struct st_sprite));
 					if(sprites == NULL)error();
 					
 					output = 2;
+					// got it
 					status = packmsg;
 					statustimer = 0;
 					break;
@@ -180,6 +204,7 @@ void move()
 	{
 		if(keydown(KEY_CTRL_MENU))
 		{
+			// open game menu
 			openmenu();
 			output = (output < 2)?1:2;
 			return;
@@ -188,24 +213,27 @@ void move()
 	
 	if(keydown(KEY_CTRL_SHIFT))
 	{
-			switch(player.weapon)
-			{
-				case GUN:
-					pshoot();
-					break;
-				/*case KNIFE:
-					newy = player.y + player.dirY;
-					newx = player.x + player.dirX;
-					if(newx >= 0 && newx < MAPSIZE)
-						if(map[(int)(newx)][(int)(newy)] >= 10)
-						{enemies[map[(int)(newx)][(int)(newy)] - 10].health -= 15;}
-					break;*/
-			}
-			
-			output = 2;
+		// fire!
+		switch(player.weapon)
+		{
+			case GUN:
+				// perhaps an enemy was hit?
+				pshoot();
+				break;
+			/*case KNIFE: // todo: fix this for dynamical enemies
+				newy = player.y + player.dirY;
+				newx = player.x + player.dirX;
+				if(newx >= 0 && newx < MAPSIZE)
+					if(map[(int)(newx)][(int)(newy)] >= 10)
+					{enemies[map[(int)(newx)][(int)(newy)] - 10].health -= 15;}
+				break;*/
+		}
+		
+		output = 2;
 	}
 	if(keydown(KEY_CTRL_ALPHA))
 	{
+		// alpha opens a door
 		newy = player.y + player.dirY;
 		newx = player.x + player.dirX;
 		if(newx >= 0 && newx < MAPSIZE)
@@ -213,6 +241,7 @@ void move()
 			if(map[(int)(newx)][(int)(newy)] == DOOR)
 			{
 				map[(int)(newx)][(int)(newy)] = SPACE;
+				// now there is no wall any more, we can walk through
 				solids[(int)newx][(int)newy] = UNSOLID;
 			}
 		}
@@ -220,14 +249,18 @@ void move()
 	}
 	if(keydown(KEY_CTRL_OPTN))
 	{
+		// optn, change weapon
 		player.weapon += 1;
 		if(player.weapon == WEAPON_OVERFLOW)
 		player.weapon = GUN;
 	}
 }
 
+// this is the "core", most important part
+// rendering is done here
 void cast()
 {
+	// see Lode Vandevenne's tutorial for details
 	float cameraX,rayDirX, rayDirY, sideDistX, sideDistY, deltaDistX, deltaDistY, perpWallDist, wallX, floorXWall, floorYWall, distWall;
 	int mapX, mapY, lineHeight, hit, side, x, tex, y, black, floorTexX, floorTexY, actualheight, heightdiff;
 	int stepX, drawStart, drawEnd, stepY;
@@ -254,6 +287,7 @@ void cast()
 
 	for(x = 0; x < 128; x++)
 	{
+		// create a ray from player
 		mapX = player.x;
 		mapY = player.y;		
 
@@ -315,10 +349,12 @@ void cast()
 			{			
 				if(heights[mapX][mapY] == 0 || drawheight == FALSE)
 				{
+					// it is a normal wall or something
 					hit = TRUE;
 				}
 				else
 				{
+					// now it's going to be complicated, let's draw a wall with a different height than the others \o/
 					if (side == 0)
 						perpWallDist = Abs((mapX - player.x + (1 - stepX) / 2) / rayDirX);
 					else
@@ -336,9 +372,11 @@ void cast()
 					if(drawStart < 0) drawStart = 0;	
 					drawEnd = (actualheight == 0)?32 + (Abs((int)(64 / perpWallDist)) >> 1):actualheight;
 					if(drawEnd >= 64) drawEnd = 63;	
-						
+					
+					// draw the wall
 					vertical(x, tex , drawStart, drawEnd, map[mapX][mapY], side, Abs((32 + (Abs((int)(64 / perpWallDist)) >> 1)) - (32 - (Abs((int)(64 / perpWallDist)) >> 1))));
 					
+					// now, the floor and the ceiling
 					if(side == 0 && rayDirX > 0)
 					{
 						floorXWall = mapX;
@@ -380,6 +418,7 @@ void cast()
 							(*(vram +  (y << 4) + (x >> 3))) |= (128 >> (x & 7));
 						}
 					}
+					// continue casting, but draw it 'behind' the current wall
 					actualheight = drawStart;
 				}
 			}
@@ -387,6 +426,7 @@ void cast()
 						
 		if(hit == TRUE)
 		{
+			// if we hit a wall or something, draw it
 			if (side == 0)
 				perpWallDist = Abs((mapX - player.x + (1 - stepX) / 2) / rayDirX);
 			else
@@ -407,8 +447,10 @@ void cast()
 			drawEnd = (actualheight == 0)?(lineHeight >> 1) + 32:actualheight;
 			if(drawEnd >= 64) drawEnd = 63;
 			
+			// draw it to the display
 			vertical(x, tex , drawStart, drawEnd, map[mapX][mapY], side, (actualheight > 0)?((lineHeight >> 1) + 32) - (32 - (lineHeight >> 1)):0);
 			
+			// draw floor & ceiling
 			if(drawfloor == TRUE)
 			{
 				if(side == 0 && rayDirX > 0)
@@ -468,6 +510,7 @@ void cast()
 		}
 	}
 	
+	// here something wants to be fixed... The sprites appear strange when there is a wall lower than the others
 	#define uDiv 1
 	#define vDiv 1
 	#define vMove 0.0
@@ -524,6 +567,9 @@ void cast()
 	
 	free(spriteOrder);
 }
+
+// old casting algo, this is just a backup
+// there is nothing else below, you can skip this
 /*void cast()
 {
 	float cameraX,rayDirX, rayDirY, sideDistX, sideDistY, deltaDistX, deltaDistY, perpWallDist, wallX, floorXWall, floorYWall, distWall;

@@ -1,6 +1,10 @@
 #include "global.h"
 #include "sprites.h"
 
+// these are sprite constants
+// 0 = white, 1 = black
+// and for sprites, 0 is transparent and 2 white
+
 const int wall[2][16][16] = {
 {
 	{ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 },

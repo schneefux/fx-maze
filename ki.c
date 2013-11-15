@@ -5,6 +5,10 @@
 
 #include "mathf.h"
 
+// here are the ai's functions
+// todo: change the function's names
+
+// check if the player can be seen by the enemy
 static int kshoot(float x, float y)
 {
 	float xadd, yadd;
@@ -20,6 +24,7 @@ static int kshoot(float x, float y)
 		yadd =sgn(player.y - y);
 	}
 	
+	// this is raycasting again
 	while(x < MAPSIZE && y < MAPSIZE && x >= 0 && y >= 0)
 	{
 		if((int)y == (int)player.y && (int)x == (int)player.x)
@@ -36,6 +41,7 @@ static int kshoot(float x, float y)
 	return FALSE;
 }
 
+// move them in a random direction
 static void kimove()
 {
 	int c;
@@ -45,14 +51,17 @@ static void kimove()
 	{
 		int fail[4] = {0}, success = FALSE;
 
+		// it _will_ move
 		if(sprites[c].type == TYPE_ENEMY)
 		{
+			// try until there is no possible direction left
 			while(!(fail[0] == TRUE && fail[1] == TRUE && fail[2] == TRUE && fail[3] == TRUE) && success == FALSE)
 			{
 				float newx, newy;
 				
 				if(kshoot(sprites[c].x, sprites[c].y) == TRUE)
 				{
+					// if the player is in sight (< 3 fields), go to him/her
 					if(Abs((player.x) - sprites[c].x) > 3)
 					{
 						dirx = (player.x > sprites[c].x)?1:(player.x == sprites[c].x)?0:-1;
@@ -74,6 +83,7 @@ static void kimove()
 				}
 				else
 				{
+					// there is no player, move randomly
 					uint num;
 					
 					do
@@ -107,6 +117,7 @@ static void kimove()
 				newx = sprites[c].x + dirx;
 				newy = sprites[c].y + diry;
 				
+				// move that stupid sprite
 				if(newx < MAPSIZE && newx >= 0 && newy < MAPSIZE && newy  >= 0)
 				{
 					if(solids[(int)newx][(int)newy] == UNSOLID)
@@ -123,6 +134,8 @@ static void kimove()
 	}
 }
 
+// this is a kind of high-level kshoot
+// it subtracts the health
 static void kishoot(void)
 {
 	int c;
@@ -143,6 +156,7 @@ static void kishoot(void)
 	}
 }
 
+// this is the timer that moves the ai
 void timer(void)
 {
 	static int ki = 0;
@@ -155,6 +169,7 @@ void timer(void)
 	kishoot();
 }
 
+// set the new position in the map
 void kisetpos(float *x, float *y)
 {
 	do

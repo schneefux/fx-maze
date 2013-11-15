@@ -15,17 +15,22 @@
 
 void main(void)
 {
+	// strings for display
 	char FPS[9];
 	char LIVE[13];
+	// fps counter
 	static int oldtime;
 	static int maintimer = 0;
 
+	// every 100 ms, change contrast
 	if(RTC_Elapsed_ms(maintimer, 100))
 	{
+		// this is a workaround, so that no extra timer is needed
 		maintimer = RTC_GetTicks();
 		
 		if(player.health <= 50)
 		{
+			// health is low, warn player
 			if(contrast > 10 || contrast < -10)
 			{
 				contradd *= -1;
@@ -34,32 +39,37 @@ void main(void)
 			set_contrast(168 + contrast);
 		}
 		
+		// remove status every 100 * 100 ms = 10 sec, IIRC
 		if(statustimer++ == 100)
 		{
 			statustimer = 0;
 			status = NULL;
 		}
 		
+		// a hit is shown with a backlight flash
 		if(BacklightIsOn() && statustimer % 5 == 0)
 		{
+			// turn backlight off after 100 ms * 5 = 500 ms
 			BacklightOff();
 		}
 	}
 	
+	// check keyboard input
 	move();
-	if(output != 0)
+	if(output != 0) // output of move()
 	{
 		unsigned int time;
-		oldtime = RTC_GetTicks();
-		clear_vram();
-		cast();
+		oldtime = RTC_GetTicks(); // init FPS counter
+		clear_vram(); // clear display
+		cast(); // render image
 		
-		drawgun();
+		drawgun(); // show gun
 		
-		if(output == 2)
+		if(output == 2) // if the player moved fw/bw, the gun has to move
 		{
 			if(player.gunpos > 3 || player.gunpos < -3)
 			{
+				// move gun from top to bottom and vice-versa
 				if(player.gunpos > 3)
 				player.gunpos = 3;
 				
@@ -68,21 +78,28 @@ void main(void)
 			player.gunpos += gundir;
 		}	
 		
+		// print FPS
 		sprintf(&FPS, "fps:%2.2f", 1 / fps);
 		PrintMini(0, 0, &FPS, MINI_OR);
 		
+		// print health
 		sprintf(&LIVE, "health:%4d", player.health);
 		PrintMini(80, 0, &LIVE, MINI_OR);
 		
+		// and a status message, if available
 		if(status != NULL)PrintMini(0, 58, status, MINI_OR);
 		
+		// update screen
 		display_vram();
 		if(player.health <= 0)
 		{
+			// game over
 			exit = TRUE;
 		}
+		// set kind of move (output from move()) to 0 again
 		output = 0;
 		
+		// re-calculate FPS
 		fps = (((RTC_GetTicks() * 15.625 - oldtime * 15.625)) / 1000);
 	}
 }
@@ -90,8 +107,10 @@ void main(void)
 int AddIn_main(int isAppli, unsigned short OptionNum)
 {
 	int c;
+	// get the pointer to vram
 	vram = Disp_GetVRAMPtr();
 	
+	// if we ever got a new calc model, this would save us (hopefully)
 	if(getCalc() == UNKNOWN)
 	{
 		clear_vram();
@@ -112,19 +131,26 @@ int AddIn_main(int isAppli, unsigned short OptionNum)
 		GetKey(&c);
 	}
 	
+	// make it possible to start the game again after [Menu]
 	APP_EnableRestart();
 
+	// generate some tables for speed
 	table();
+	// seed rand()
 	seedrandom();
 	
+	// if we want to have enemies, allocate and create them
 	if(ENEMYCNT)
 	{
 		sprites = (struct st_sprite *) malloc(ENEMYCNT * sizeof(struct st_sprite));
+		// these are debug checks; there should be enough memory
 		if(sprites == NULL)error();
 	}
 	
+	// spritecnt holds the number of all sprites; enemies, items and whatever else will come
 	spritecnt = ENEMYCNT;
 	
+	// set every enemy into the map
 	for(c = 0; c < spritecnt; c++)
 	{
 		kisetpos(&sprites[c].x, &sprites[c].y);
@@ -135,8 +161,10 @@ int AddIn_main(int isAppli, unsigned short OptionNum)
 		sprites[c].effect = 50;
 	}
 	
+	// create a random maze
 	maze();
 	
+	// init the player's values
 	player.x = 1.5;
 	player.y = 1.5;
 	player.dirX = -1;
@@ -148,20 +176,25 @@ int AddIn_main(int isAppli, unsigned short OptionNum)
 	player.health = 500;
 	contrast = 0;
 	
+	// this timer handles the enemie's movement. KI is AI in German, I didn't want to rewrite everything :)
 	Timer_Install(8, &timer, KISPEED);
 	Timer_Start(8);
 	
 	exit = FALSE;
 	
+	// main loop
 	while(exit == FALSE)
 	{
 		main();
+		// if player won
 		if((int)player.x == MAPSIZE - 1 && (int)player.y == MAPSIZE - 1)break;
 	}
 	
+	// kill all timers, set contrast to default
 	Timer_Uninstall(8);
 	set_contrast(168);
 	
+	// did he/she loose
 	if(player.health > 0 && exit == FALSE)
 	{
 		clear_vram();
@@ -172,8 +205,10 @@ int AddIn_main(int isAppli, unsigned short OptionNum)
 		display_vram();
 		Sleep(1000);
 	}
+	// free memory to avoid system errors
 	free(sprites);
 	
+	// clear keyboard buffer, otherwise you could see the cursor move after exit
 	Keyboard_ClrBuffer();
 }
 
