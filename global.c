@@ -24,7 +24,8 @@ uint spritecnt = 0;
 const char *status = NULL;
 unsigned int statustimer = 0;
 
-uint map[MAPSIZE][MAPSIZE] = {0}; // this is now generated automatically/*
+uint map[MAPSIZE][MAPSIZE] = {0}; // this is now generated automatically
+/*
 {
 	{ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 },
 	{ 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 2 , 0 , 0 , 0 , 0 , 1 },
@@ -48,7 +49,8 @@ uint map[MAPSIZE][MAPSIZE] = {0}; // this is now generated automatically/*
 	{ 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 },
 };*/
 
-int heights[MAPSIZE][MAPSIZE] = {0}; // this, too. 0 means normal height, 32 is about half of the normal/*
+int heights[MAPSIZE][MAPSIZE] = {0}; // this, too. 0 means normal height, 32 is about half of the normal
+/*
 {
 	{ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 },
 	{ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 32 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 },

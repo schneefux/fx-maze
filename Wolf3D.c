@@ -1,7 +1,3 @@
-/* wird zum Waffenwechsel werden.
-"Türen kann man nur öffnen" - was willst du sonst damit machen? Aufessen?
-*/
-
 #include "key.h"
 #include "global.h"
 #include "syscalls.h"
