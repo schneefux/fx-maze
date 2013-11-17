@@ -69,7 +69,7 @@ void combSort(int* order, float* dist, int amount)
 // perform a shoot
 static void pshoot()
 {
-	float xadd, yadd, x, y;
+	float xadd, yadd, x, y, direnemy, dirplayer_left, dirplayer_right;
 	int c;
 	
 	// check for every sprite whether it is hit
@@ -91,8 +91,13 @@ static void pshoot()
 				xadd = ((sprites[c].x - x) / Abs(y - sprites[c].y));
 				yadd = sgn(sprites[c].y - y);
 			}
+
+			direnemy = xadd / yadd;
 			
-			if(1/*TODOTODOTODOTODO*/) // todo: implement something to check whether the player shoots in the right direction
+			dirplayer_left = (player.dirX - player.planeX) / (player.dirY - player.planeY);
+			dirplayer_right = (player.dirX + player.planeX) / (player.dirY + player.planeY);
+			
+			if(direnemy < dirplayer_right && direnemy > dirplayer_left)
 			{
 				// very simple raycasting
 				while(x < MAPSIZE && y < MAPSIZE && x >= 0 && y >= 0)
