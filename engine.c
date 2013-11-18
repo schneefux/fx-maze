@@ -64,8 +64,6 @@ void combSort(int* order, float* dist, int amount)
 	}
 }
 
-#define PI 3.141592653589793238464
-
 // perform a shoot
 static void pshoot()
 {
@@ -298,9 +296,18 @@ void cast()
 	int foundsprite = FALSE, spritehere;
 	
 	spriteDist = (float *) calloc(spritecnt, sizeof(float));
-	if(spriteDist == NULL)error("Memory; locate spriteDist");
+	if(spriteDist == NULL)
+	{
+		char msg[20];
+		sprintf(&msg, "locate spriteDist: %d B", spritecnt * sizeof(float));
+	}
 	spriteOrder = (int *) calloc(spritecnt, sizeof(int));
-	if(spriteOrder == NULL)error("Memory; locate spriteOrder");
+	if(spriteOrder == NULL)
+	{
+		char msg[20];
+		sprintf(&msg, "locate spriteOrder: %d B", spritecnt * sizeof(float));
+		error("Memory; locate spriteOrder");
+	}
 
 	for(x = 0; x < spritecnt; x++)
 	{

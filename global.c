@@ -107,4 +107,5 @@ void error(char * msg)
 	PrintMini(1,1, "ERROR!");
 	PrintMini(1, 10, msg);
 	display_vram();
+	while(1);
 }
