@@ -91,7 +91,9 @@ static void pshoot()
 				xadd = ((sprites[c].x - x) / Abs(y - sprites[c].y));
 				yadd = sgn(sprites[c].y - y);
 			}
-
+			
+			// the enemy must be between dirplayer_left and right, that means visible on the screen
+			
 			direnemy = xadd / yadd;
 			
 			dirplayer_left = (player.dirX - player.planeX) / (player.dirY - player.planeY);
@@ -113,7 +115,7 @@ static void pshoot()
 						{
 							sprites[c] = sprites[spritecnt];
 							sprites = (struct st_sprite *) realloc(sprites, spritecnt-- * sizeof(struct st_sprite));
-							if(sprites == NULL)error();
+							if(sprites == NULL)error("Memory; delete enemy after hit");
 						}
 						// we hit an enemy, go back to the game
 						return;
@@ -215,7 +217,7 @@ void move()
 					// delete it
 					sprites[c] = sprites[spritecnt];
 					sprites = (struct st_sprite *) realloc(sprites, spritecnt-- * sizeof(struct st_sprite));
-					if(sprites == NULL)error();
+					if(sprites == NULL)error("Memory; delete a pack");
 					
 					output = 2;
 					// got it
@@ -296,9 +298,9 @@ void cast()
 	int foundsprite = FALSE, spritehere;
 	
 	spriteDist = (float *) calloc(spritecnt, sizeof(float));
-	if(spriteDist == NULL)error();
+	if(spriteDist == NULL)error("Memory; locate spriteDist");
 	spriteOrder = (int *) calloc(spritecnt, sizeof(int));
-	if(spriteOrder == NULL)error();
+	if(spriteOrder == NULL)error("Memory; locate spriteOrder");
 
 	for(x = 0; x < spritecnt; x++)
 	{

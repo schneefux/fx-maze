@@ -375,7 +375,7 @@ start:
 				if(cntwall(curx, cury) >= 3)
 				{
 					sprites = (struct st_sprite *) realloc(sprites, (spritecnt + 1) * sizeof(struct st_sprite));
-					if(sprites == NULL)error();
+					if(sprites == NULL)error("Memory; create sprites");
 					sprites[spritecnt].x = curx + 0.5;
 					sprites[spritecnt].y = cury + 0.5;
 					sprites[spritecnt].texture.ptr = &pack;

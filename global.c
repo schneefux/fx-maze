@@ -99,10 +99,12 @@ uint solids[MAPSIZE][MAPSIZE] = {0}; // here you can check whether you can walk 
 // nice idea would be a hidden wall you can walk through to access a secret room... hmmm
 
 // something happened that should not happen
-void error(void)
+void error(char * msg)
 {
+	int k;
+
 	clear_vram();
 	PrintMini(1,1, "ERROR!");
+	PrintMini(1, 10, msg);
 	display_vram();
-	while(1);
 }

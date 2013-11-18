@@ -161,7 +161,7 @@ int AddIn_main(int isAppli, unsigned short OptionNum)
 	{
 		sprites = (struct st_sprite *) malloc(ENEMYCNT * sizeof(struct st_sprite));
 		// these are debug checks; there should be enough memory
-		if(sprites == NULL)error();
+		if(sprites == NULL)error("Memory; locate enemies");
 	}
 	
 	// spritecnt holds the number of all sprites; enemies, items and whatever else will come

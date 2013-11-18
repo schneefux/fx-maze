@@ -81,7 +81,7 @@ extern struct st_sprite{float x, y; int type, effect; struct{int *ptr; uint widt
 
 extern uint spritecnt;
 
-void error(void);
+void error(char *);
 
 extern const char *status;
 extern unsigned int statustimer;
